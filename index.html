@@ -69,6 +69,15 @@ body.panel{width:auto;max-width:560px;margin:0 auto;height:auto;overflow:visible
 .panel .th img{width:100%;height:100%;object-fit:cover;border-radius:5px}
 .panel .th u{position:absolute;top:-4px;right:-4px;background:#b3263e;border-radius:50%;width:18px;height:18px;text-align:center;font-size:12px;line-height:18px;cursor:pointer;text-decoration:none}
 .panel .chk{display:flex;gap:6px;align-items:center;margin-top:8px}
+body.panel{padding:8px}.panel .card{margin-bottom:8px}.panel input[type=text],.panel input[type=number],.panel select{padding:5px}
+.panel details.card{padding:0 10px}.panel details[open].card{padding-bottom:10px}
+.panel summary{cursor:pointer;padding:10px 0;font:700 17px 'Antonio',Impact;letter-spacing:.06em;color:#25c2ff;list-style:none}
+.panel summary::before{content:'▸ '}.panel details[open]>summary::before{content:'▾ '}
+.panel .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.panel .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.panel .fl{min-width:0}.panel input[type=file]{width:100%;font-size:12px}
+.panel .th2{font:700 15px 'Antonio',Impact;letter-spacing:.06em}
+.panel .pnm{font:700 16px 'Antonio',Impact;text-align:center;color:#a99dff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel .pc .big{font-size:48px;margin:2px 0 6px}.panel .pc .g2{gap:6px}.panel .pc button{padding:9px 4px}.panel button.bp{padding:14px 4px;font-size:15px}
 </style></head>
 <body>
 <div id="stage">
@@ -171,38 +180,40 @@ function draw(){if(P||!$('#sb'))return;
 /* ---------- panel ---------- */
 const get=p=>p.split('.').reduce((o,k)=>o?.[k],S);
 function setp(p,v){const k=p.split('.'),l=k.pop();k.reduce((o,x)=>o[x],S)[l]=v}
-const f=(l,p,t='text')=>`<label>${l}</label><input data-p="${p}" type="${t}" value="${esc(get(p))}">`;
+const f=(l,p,t='text')=>`<div class="fl"><label>${l}</label><input data-p="${p}" type="${t}" value="${esc(get(p))}"></div>`;
 const chk=(l,p)=>`<div class="chk"><input type="checkbox" data-p="${p}" ${get(p)?'checked':''}> ${l}</div>`;
-const teamCard=t=>`<div class="card"><h2 id="n${t}"></h2><div class="big"><span id="p${t}"></span><small id="q${t}"></small></div>
-<div class="row"><button data-a="pt:${t}:-1" class="g">−1</button><button data-a="pt:${t}:1">+1 punto</button></div>
-<div class="row"><button data-a="set:${t}:-1" class="g">− set</button><button data-a="set:${t}:1" class="g">+ set</button>
-<button data-a="to:${t}" class="g">T.O. <span id="t${t}"></span></button><button data-a="sv:${t}" class="g">Saque</button></div>
-${f('Nombre',t+'.name')}${f('Sigla (para alertas)',t+'.short')}${f('Color de barra',t+'.color','color')}
-${f('URL del logo (PNG con fondo transparente)',t+'.logo')}</div>`;
+const UI=(()=>{try{return JSON.parse(localStorage.getItem('sporteros_voley_ui')||'{}')}catch{return{}}})(),OPEN={eq:1,pt:1,ca:1};
+const sec=(id,t,b)=>`<details class="card" data-s="${id}" ${(UI[id]??OPEN[id])?'open':''}><summary>${t}</summary>${b}</details>`;
+const teamCfg=t=>`<div><div class="th2" style="color:${t==='a'?'#a99dff':'#25c2ff'}">EQUIPO ${t.toUpperCase()}</div>${f('Nombre',t+'.name')}${f('Sigla (alertas)',t+'.short')}${f('Color de barra',t+'.color','color')}${f('URL del logo (PNG transparente)',t+'.logo')}</div>`;
+const ptCol=t=>`<div class="pc"><div class="pnm" id="n${t}"></div><div class="big"><span id="p${t}"></span><small id="q${t}"></small></div>
+<div class="g2"><button data-a="pt:${t}:-1" class="g">−1</button><button data-a="pt:${t}:1" class="bp">+1 punto</button>
+<button data-a="set:${t}:-1" class="g">− set</button><button data-a="set:${t}:1" class="g">+ set</button>
+<button data-a="to:${t}" class="g">T.O. <span id="t${t}"></span></button><button data-a="sv:${t}" class="g">Saque</button></div></div>`;
+const hint=x=>`<div class="row"><small style="opacity:.7">${x}</small></div>`;
 function build(){document.documentElement.className='pn';document.body.className='panel';document.body.innerHTML=`<h1>PANEL · OVERLAY VÓLEY</h1>
-${teamCard('a')}${teamCard('b')}
-<div class="card"><h2>PARTIDO</h2>${f('Título','title')}${f('Subtítulo (jornada, sede…)','sub')}
-<label>Formato</label><select data-p="bestOf"><option value="5">Al mejor de 5 (set 5 a 15)</option><option value="3">Al mejor de 3 (set 3 a 15)</option></select>
-${chk('Mostrar marcador','showScore')}
+${sec('eq','EQUIPOS',`<div class="g2">${teamCfg('a')}${teamCfg('b')}</div>`)}
+${sec('pt','PUNTOS',`<div class="g2">${ptCol('a')}${ptCol('b')}</div>
 <div class="row"><button data-a="undo" class="g">Deshacer (Z)</button><button data-a="zero" class="g">Puntos a 0</button><button data-a="new" class="r">Nuevo partido</button></div>
-<div class="row"><small style="opacity:.7">Atajos: 1 / 2 suman punto · Q / W restan · Z deshace</small></div></div>
-<div class="card"><h2>SLIDER DE FOTOS</h2><label>Agregar fotos</label><input type="file" accept="image/*" multiple id="ph">
-${f('Segundos por foto','interval','number')}${f('Ancho del slider (px, alto 16:9)','sliderW','number')}${chk('Mostrar slider','showSlider')}<div class="th" id="th"></div></div>
-<div class="card"><h2>CAMPO · TRAYECTORIA DEL BALÓN</h2>
-<div style="border-radius:8px;overflow:hidden">${courtSVG('p')}</div>
-<div class="row"><small style="opacity:.7">Haz clic donde esté el balón: se mueve y deja la ruta de los últimos 6 toques. Clic fuera de la cancha = balón fuera.</small></div>
+${hint('Atajos: 1 / 2 suman punto · Q / W restan · Z deshace')}`)}
+${sec('ca','CAMPO · TRAYECTORIA DEL BALÓN',`<div style="border-radius:8px;overflow:hidden">${courtSVG('p')}</div>
+${hint('Haz clic donde esté el balón: se mueve y deja la ruta de los últimos 6 toques. Clic fuera de la cancha = balón fuera.')}
 <div class="row"><button data-a="court:x" id="cb"></button><button data-a="cu:x" class="g">Deshacer toque</button><button data-a="cc:x" class="g">Limpiar ruta</button></div>
-${f('X (px)','court.x','number')}${f('Y (px)','court.y','number')}${f('Ancho (px)','court.w','number')}</div>
-<div class="card"><h2>ANIMACIÓN DE SET / PARTIDO</h2>${chk('Mostrar animación al ganar set o partido','showAnim')}
-<div class="row"><button data-a="demo:a:set" class="g">Probar set A</button><button data-a="demo:b:set" class="g">Probar set B</button></div>
-<div class="row"><button data-a="demo:a:match" class="g">Probar partido A</button><button data-a="demo:b:match" class="g">Probar partido B</button></div></div>
-<div class="card"><h2>RECUADRO DE PUBLICIDAD</h2><div class="row"><button data-a="ad:x" id="adb"></button></div>
-${f('Texto','adText')}${f('Alto (px)','adH','number')}<div class="row"><small style="opacity:.7">Va bajo el slider, del mismo ancho. Mientras está visible, el chat se oculta. Atajo: P</small></div></div>
-<div class="card"><h2>CHAT EN PANTALLA</h2>${chk('Mostrar chat','showChat')}${f('URL del chat (overlay de Social Stream, etc.)','chatUrl')}
-${f('X (px)','chat.x','number')}${f('Y (px)','chat.y','number')}${f('Ancho (px)','chat.w','number')}${f('Alto (px)','chat.h','number')}</div>
-<div class="card"><h2>CÁMARAS DE NARRADORES</h2>${chk('Mostrar marcos','showCams')}${chk('Mostrar guía de posición (desactívala al salir en vivo)','guide')}
-${[0,1].map(i=>f('Cámara '+(i+1)+' · nombre','cams.'+i+'.name')+f('X (px)','cams.'+i+'.x','number')+f('Y (px)','cams.'+i+'.y','number')+f('Diámetro (px)','cams.'+i+'.d','number')).join('')}</div>
-<div class="card"><h2>CINTA INFERIOR</h2>${f('Etiqueta','tag')}${f('Texto','ticker')}${chk('Mostrar cinta','showTicker')}</div>`;
+<div class="g3">${f('X (px)','court.x','number')}${f('Y (px)','court.y','number')}${f('Ancho (px)','court.w','number')}</div>`)}
+${sec('pa','CONFIGURACIÓN DEL PARTIDO',`${f('Título','title')}${f('Subtítulo (jornada, sede…)','sub')}
+<div class="fl"><label>Formato</label><select data-p="bestOf"><option value="5">Al mejor de 5 (set 5 a 15)</option><option value="3">Al mejor de 3 (set 3 a 15)</option></select></div>
+${chk('Mostrar marcador','showScore')}`)}
+${sec('sl','SLIDER DE FOTOS',`<label>Agregar fotos</label><input type="file" accept="image/*" multiple id="ph">
+<div class="g2">${f('Segundos por foto','interval','number')}${f('Ancho (px, alto 16:9)','sliderW','number')}</div>${chk('Mostrar slider','showSlider')}<div class="th" id="th"></div>`)}
+${sec('ad','RECUADRO DE PUBLICIDAD',`<div class="row"><button data-a="ad:x" id="adb"></button></div>
+${f('Texto','adText')}${f('Alto (px)','adH','number')}${hint('Va bajo el slider, del mismo ancho. Mientras está visible, el chat se oculta. Atajo: P')}`)}
+${sec('an','ANIMACIÓN DE SET / PARTIDO',`${chk('Mostrar animación al ganar set o partido','showAnim')}
+<div class="g2" style="margin-top:8px"><button data-a="demo:a:set" class="g">Probar set A</button><button data-a="demo:b:set" class="g">Probar set B</button><button data-a="demo:a:match" class="g">Probar partido A</button><button data-a="demo:b:match" class="g">Probar partido B</button></div>`)}
+${sec('ch','CHAT EN PANTALLA',`${chk('Mostrar chat','showChat')}${f('URL del chat (overlay de Social Stream, etc.)','chatUrl')}
+<div class="g2">${f('X (px)','chat.x','number')}${f('Y (px)','chat.y','number')}${f('Ancho (px)','chat.w','number')}${f('Alto (px)','chat.h','number')}</div>`)}
+${sec('cm','CÁMARAS DE NARRADORES',`${chk('Mostrar marcos','showCams')}${chk('Mostrar guía de posición (desactívala al salir en vivo)','guide')}
+${[0,1].map(i=>f('Cámara '+(i+1)+' · nombre','cams.'+i+'.name')+`<div class="g3">${f('X','cams.'+i+'.x','number')}${f('Y','cams.'+i+'.y','number')}${f('Diámetro','cams.'+i+'.d','number')}</div>`).join('')}`)}
+${sec('ti','CINTA INFERIOR',`${f('Etiqueta','tag')}${f('Texto','ticker')}${chk('Mostrar cinta','showTicker')}`)}`;
+  document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.s){UI[d.dataset.s]=d.open?1:0;try{localStorage.setItem('sporteros_voley_ui',JSON.stringify(UI))}catch{}}},true);
   $('[data-p=bestOf]').value=S.bestOf;upd();thumbs()}
 function upd(){paintCourt('p');$('#cb').textContent=S.showCourt?'Ocultar campo':'Mostrar campo';$('#adb').textContent=S.showAd?'Ocultar recuadro de publicidad':'Mostrar recuadro de publicidad';['a','b'].forEach(t=>{$('#n'+t).textContent=S[t].name;$('#p'+t).textContent=S[t].pts;
   $('#q'+t).textContent='sets '+S[t].sets+(S.serve===t?' · saque':'');$('#t'+t).textContent='('+S[t].to+')'})}
