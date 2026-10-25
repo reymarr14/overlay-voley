@@ -31,7 +31,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;font
 .sl img.on{opacity:1}
 .ch{position:absolute;border-radius:14px;overflow:hidden;border:5px solid var(--p);background:#16132ecc;display:none}
 .ch iframe{width:100%;height:100%;border:0;background:transparent}
-.bn{position:absolute;left:56px;top:690px;width:540px;padding:14px 20px;background:linear-gradient(90deg,var(--p),#3d8bff);color:#fff;border-radius:16px;border:4px solid #fff;font:700 44px/1.15 'Antonio',Impact,sans-serif;text-transform:uppercase;text-align:center;letter-spacing:.04em;filter:drop-shadow(0 8px 18px #0007);transform:translateX(-700px);opacity:0}
+.bn{position:absolute;left:48px;top:690px;width:660px;padding:14px 20px;background:linear-gradient(90deg,var(--p),#3d8bff);color:#fff;border-radius:16px;border:4px solid #fff;font:700 44px/1.15 'Antonio',Impact,sans-serif;text-transform:uppercase;text-align:center;letter-spacing:.04em;filter:drop-shadow(0 8px 18px #0007);transform:translateX(-700px);opacity:0}
 .bn small{display:table;margin:0 auto 8px;background:var(--ink);color:#fff;font-size:26px;letter-spacing:.12em;padding:3px 18px;border-radius:8px;text-shadow:none}
 .bn .em{display:inline-block;animation:wig .6s ease-in-out 8}
 .bn.go{animation:bn 6s cubic-bezier(.2,.9,.3,1) forwards}
@@ -112,7 +112,7 @@ body.panel{padding:8px}.panel .card{margin-bottom:8px}.panel input[type=text],.p
   <div class="tk" id="tk"><span class="tag" id="tg"></span><div class="vp"><span id="tt"></span></div></div>
 </div>
 <script>
-const $=s=>document.querySelector(s),K='sporteros_voley_v1',P=/panel/.test(location.search);
+const $=s=>document.querySelector(s),VER='2026-10-25.9',K='sporteros_voley_v1',P=/panel/.test(location.search);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const courtSVG=k=>`<svg id="${k}court" viewBox="-1.5 -2.5 21 12.5" style="display:block;width:100%;${k==='p'?'cursor:crosshair':''}">
 <rect x="-1.5" y="-2.5" width="21" height="12.5" fill="#16132e"/>
@@ -146,15 +146,25 @@ const D=()=>({a:T('Equipo A','#604ee2'),b:T('Equipo B','#25c2ff'),serve:'',hist:
   title:'LIGA PERUANA DE VÓLEY',sub:'Jornada 1',ticker:'Sigue el partido en vivo con Sporteros',tag:'SPORTEROS',
   showScore:true,showTicker:true,showSlider:true,interval:6,photos:[],
   showCams:true,guide:false,cams:[{name:'Narrador 1',x:60,y:400,d:240},{name:'Narrador 2',x:340,y:400,d:240}],
-  sliderW:900,showChat:false,chatUrl:'',chat:{x:1392,y:580,w:480,h:380},showAnim:true,ev:null,showAd:false,adText:'Anuncia tu marca aquí',adH:200,trail:[],showCourt:true,court:{x:600,y:776,w:360},roster:null,showRoster:false,stats:null,showStats:false,statsView:'last',rpos:{x:972,y:570,w:900},v:3});
+  sliderW:900,showChat:false,chatUrl:'',chat:{x:1392,y:580,w:480,h:380},showAnim:true,ev:null,showAd:false,adText:'Anuncia tu marca aquí',adH:200,trail:[],showCourt:true,court:{x:720,y:800,w:250},roster:null,showRoster:false,stats:null,showStats:false,statsView:'last',rpos:{x:972,y:570,w:900},v:3});
 const load=()=>{try{const s=JSON.parse(localStorage.getItem(K)||'{}');if((s.v||0)<2)s.cams=D().cams;if((s.v||0)<3){s.chat=D().chat;s.sliderW=900}s.v=3;return{...D(),...s}}catch{return D()}};
 let S=load(),U=[],bc=new BroadcastChannel(K);
 const other=t=>t==='a'?'b':'a',need=()=>Math.ceil(S.bestOf/2),
   decider=()=>S.a.sets+S.b.sets===S.bestOf-1,target=()=>decider()?15:25;
 function save(){try{localStorage.setItem(K,JSON.stringify(S));bc.postMessage(1);return true}
-  catch{alert('Almacenamiento lleno: quita algunas fotos.');return false}}
+  catch{flash('⚠ No se pudo guardar: almacenamiento lleno. El overlay no se actualizará; quita fotos del slider.',1);return false}}
 const sync=()=>{S=load();draw();P&&upd()};
-addEventListener('storage',e=>e.key===K&&sync());bc.onmessage=sync;
+addEventListener('storage',e=>e.key===K&&sync());
+bc.onmessage=e=>{const m=e.data;if(m&&m.ping){P||bc.postMessage({hello:VER});return}if(m&&m.hello){P&&ovSeen(m.hello);return}sync()};
+if(!P){let raw=localStorage.getItem(K);setInterval(()=>{const x=localStorage.getItem(K);if(x!==raw){raw=x;sync()}},1000);bc.postMessage({hello:VER})}
+let seen=null;const t0=Date.now();
+function ovSeen(v){seen={v,t:Date.now()};renderOv()}
+function renderOv(){const el=$('#ovs');if(!el)return;const ok=seen&&Date.now()-seen.t<12000;let m,c;
+  if(ok&&seen.v===VER){m='✓ Overlay conectado (misma versión)';c='#1f8a5b'}
+  else if(ok){m='⚠ El overlay tiene otra versión ('+seen.v+', el panel '+VER+'). En OBS: selecciona la fuente y pulsa Actualizar.';c='#b36b00'}
+  else if(Date.now()-t0<3500){m='Buscando overlay…';c='#3a3566'}
+  else{m='⚠ No detecto el overlay. En OBS prueba: fuente → Propiedades → "Refrescar caché de la página actual". Si sigue igual, la fuente usa otra copia del archivo o este panel está en otro navegador.';c='#b36b00'}
+  el.textContent=m;el.style.background=c}
 
 /* ---------- lógica ---------- */
 const snap=()=>{U.push(JSON.stringify({a:[S.a.pts,S.a.sets,S.a.to],b:[S.b.pts,S.b.sets,S.b.to],serve:S.serve,hist:S.hist}));U.length>60&&U.shift()};
@@ -164,7 +174,7 @@ function pt(t,d){snap();const o=S[t],p=S[other(t)],g=target();o.pts=Math.max(0,o
   if(d>0){S.serve=t;if(o.pts>=g&&o.pts-p.pts>=2){S.hist.push([S.a.pts,S.b.pts]);o.sets++;S.a.pts=S.b.pts=0;S.a.to=S.b.to=2;S.ev={id:Date.now(),type:o.sets>=need()?'match':'set',team:t}}}done()}
 function setS(t,d){snap();S[t].sets=Math.max(0,S[t].sets+d);done()}
 function useTo(t){snap();S[t].to=Math.max(0,S[t].to-1);done()}
-function done(){save();draw();P&&upd()}
+function done(){const ok=save();draw();P&&upd();return ok}
 function alertOf(t){const o=S[t],p=S[other(t)];
   if(o.pts+1>=target()&&o.pts+1-p.pts>=2)return o.sets+1===need()?'PUNTO DE PARTIDO':'PUNTO DE SET'}
 
@@ -197,7 +207,7 @@ function draw(){if(P||!$('#sb'))return;
   $('#sl').style.display=S.showSlider&&S.photos.length?'':'none';
   $('#sl').style.width=S.sliderW+'px';$('#sl').style.height=Math.round(S.sliderW*9/16)+'px';
   const ad=$('#ad');ad.style.display=S.showAd?'flex':'none';ad.textContent=S.adText;
-  Object.assign(ad.style,{left:'56px',top:'690px',width:'540px',height:S.adH+'px'});
+  Object.assign(ad.style,{left:'48px',top:'690px',width:'660px',height:S.adH+'px'});
   const cc=$('#cc');cc.style.display=S.showCourt?'block':'none';Object.assign(cc.style,{left:S.court.x+'px',top:S.court.y+'px',width:S.court.w+'px'});paintCourt('o');
   const ro=$('#ro'),R=S.roster,rp=S.rpos,SD=S.showStats&&S.stats,on=!SD&&S.showRoster&&R;ro.style.display=(SD||on)?'flex':'none';
   if(SD||on){Object.assign(ro.style,{left:rp.x+'px',top:rp.y+'px',width:rp.w+'px'});ro.innerHTML=SD?statsHTML():rosterHTML()}
@@ -222,7 +232,7 @@ const ptCol=t=>`<div class="pc"><div class="pnm" id="n${t}"></div><div class="bi
 <button data-a="set:${t}:-1" class="g">− set</button><button data-a="set:${t}:1" class="g">+ set</button>
 <button data-a="to:${t}" class="g">T.O. <span id="t${t}"></span></button><button data-a="sv:${t}" class="g">Saque</button></div></div>`;
 const hint=x=>`<div class="row"><small style="opacity:.7">${x}</small></div>`;
-function build(){document.documentElement.className='pn';document.body.className='panel';document.body.innerHTML=`<h1>PANEL · OVERLAY VÓLEY</h1><div id="msg" style="display:none;position:sticky;top:0;z-index:5;padding:8px 10px;border-radius:8px;color:#fff;font-size:13px;margin-bottom:8px"></div>
+function build(){document.documentElement.className='pn';document.body.className='panel';document.body.innerHTML=`<h1>PANEL · OVERLAY VÓLEY</h1><div id="ovs" style="padding:6px 10px;border-radius:8px;font-size:12px;color:#fff;margin-bottom:8px;background:#3a3566">Buscando overlay…</div><div id="msg" style="display:none;position:sticky;top:0;z-index:5;padding:8px 10px;border-radius:8px;color:#fff;font-size:13px;margin-bottom:8px"></div>
 ${sec('eq','EQUIPOS',`<div class="g2">${teamCfg('a')}${teamCfg('b')}</div>`)}
 ${sec('pt','PUNTOS',`<div class="g2">${ptCol('a')}${ptCol('b')}</div>
 <div class="row"><button data-a="undo" class="g">Deshacer (Z)</button><button data-a="zero" class="g">Puntos a 0</button><button data-a="new" class="r">Nuevo partido</button></div>
@@ -259,7 +269,7 @@ ${sec('cm','CÁMARAS DE NARRADORES',`${chk('Mostrar marcos','showCams')}${chk('M
 ${[0,1].map(i=>f('Cámara '+(i+1)+' · nombre','cams.'+i+'.name')+`<div class="g3">${f('X','cams.'+i+'.x','number')}${f('Y','cams.'+i+'.y','number')}${f('Diámetro','cams.'+i+'.d','number')}</div>`).join('')}`)}
 ${sec('ti','CINTA INFERIOR',`${f('Etiqueta','tag')}${f('Texto','ticker')}${chk('Mostrar cinta','showTicker')}`)}`;
   document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.s){UI[d.dataset.s]=d.open?1:0;try{localStorage.setItem('sporteros_voley_ui',JSON.stringify(UI))}catch{}}},true);
-  $('[data-p=bestOf]').value=S.bestOf;upd();thumbs();
+  $('[data-p=bestOf]').value=S.bestOf;upd();thumbs();bc.postMessage({ping:1});setInterval(()=>{bc.postMessage({ping:1});renderOv()},4000);setTimeout(renderOv,3600);
   addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)loadRoster(f)})}
 function refreshFields(){document.querySelectorAll('[data-p]').forEach(i=>{if(i.type!=='checkbox'&&i.tagName!=='SELECT')i.value=get(i.dataset.p)??''})}
 function rosterUI(){const R=S.roster,n=k=>R[k].sigla||R[k].corto||R[k].nombre;
@@ -271,9 +281,9 @@ function applyRoster(j){const t=k=>{const x=j[k];if(!x||!Array.isArray(x.jugador
     j:x.jugadoras.map(q=>({n:q.n??q.numero??'',nombre:String(q.nombre||''),pos:String(q.pos||''),cap:!!q.cap}))}};
   const R={a:t('a'),b:t('b'),info:String((j.partido&&j.partido.fecha)||'')};S.roster=R;
   if($('#apn')&&$('#apn').checked)['a','b'].forEach(k=>{const q=R[k];if(q.corto||q.nombre)S[k].name=q.corto||q.nombre;if(q.sigla)S[k].short=q.sigla});
-  S.showRoster=true;refreshFields();done();flash('Lista de jugadoras cargada: '+R.a.j.length+' + '+R.b.j.length)}
+  S.showRoster=true;refreshFields();done()&&flash('Lista de jugadoras cargada: '+R.a.j.length+' + '+R.b.j.length)}
 function applyStats(j){if(!j.sets.length||!j.sets.every(s=>s.a&&s.a.tot&&s.b&&s.b.tot))throw new Error('faltan los totales ("tot") de a y b en algún set');
-  S.stats={info:String((j.partido&&j.partido.fecha)||''),sets:j.sets,acum:j.acumulado||null};S.statsView='last';S.showStats=true;done();flash('Estadísticas cargadas: '+j.sets.length+' set(s)')}
+  S.stats={info:String((j.partido&&j.partido.fecha)||''),sets:j.sets,acum:j.acumulado||null};S.statsView='last';S.showStats=true;done()&&flash('Estadísticas cargadas: '+j.sets.length+' set(s)')}
 function importJSON(txt){try{const j=JSON.parse(String(txt).replace(/^\uFEFF/,'').trim());
   if(Array.isArray(j.sets))applyStats(j);else if(j.a&&j.b&&Array.isArray(j.a.jugadoras))applyRoster(j);
   else throw new Error('no reconozco el formato (debe traer "sets" para estadísticas, o "a" y "b" con "jugadoras" para la lista)')}
