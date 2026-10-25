@@ -39,6 +39,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;font
 @keyframes wig{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-18deg) scale(1.25)}75%{transform:rotate(18deg) scale(1.25)}}
 .ad{position:absolute;display:none;align-items:center;justify-content:center;text-align:center;padding:16px;border-radius:16px;border:5px solid #fff;background:linear-gradient(135deg,var(--p),#3d8bff);color:#fff;font:700 64px/1.1 'Antonio',Impact,sans-serif;text-transform:uppercase;letter-spacing:.04em;text-shadow:0 3px 8px #0006;filter:drop-shadow(0 8px 18px #0007)}
 .cc{position:absolute;display:none;border:4px solid var(--p);border-radius:14px;overflow:hidden;filter:drop-shadow(0 8px 18px #0007)}
+.ad{transition:opacity .35s}.ad.hide{opacity:0}
 /* cámaras */
 .cr{position:absolute;border-radius:50%;border:8px solid var(--p);box-shadow:0 0 0 4px var(--c),0 8px 18px #0007;background:var(--ink)}
 .cn{position:absolute;transform:translateX(-50%);background:var(--p);color:#fff;font-size:26px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 20px;border-radius:20px;border:3px solid var(--c);white-space:nowrap}
@@ -116,7 +117,7 @@ const D=()=>({a:T('Equipo A','#604ee2'),b:T('Equipo B','#25c2ff'),serve:'',hist:
   title:'LIGA PERUANA DE VÓLEY',sub:'Jornada 1',ticker:'Sigue el partido en vivo con Sporteros',tag:'SPORTEROS',
   showScore:true,showTicker:true,showSlider:true,interval:6,photos:[],
   showCams:true,guide:false,cams:[{name:'Narrador 1',x:60,y:400,d:240},{name:'Narrador 2',x:340,y:400,d:240}],
-  sliderW:900,showChat:false,chatUrl:'',chat:{x:1392,y:580,w:480,h:380},showAnim:true,ev:null,showAd:false,adText:'Anuncia tu marca aquí',adH:200,trail:[],showCourt:true,court:{x:590,y:776,w:380},v:3});
+  sliderW:900,showChat:false,chatUrl:'',chat:{x:1392,y:580,w:480,h:380},showAnim:true,ev:null,showAd:false,adText:'Anuncia tu marca aquí',adH:200,trail:[],showCourt:true,court:{x:620,y:776,w:380},v:3});
 const load=()=>{try{const s=JSON.parse(localStorage.getItem(K)||'{}');if((s.v||0)<2)s.cams=D().cams;if((s.v||0)<3){s.chat=D().chat;s.sliderW=900}s.v=3;return{...D(),...s}}catch{return D()}};
 let S=load(),U=[],bc=new BroadcastChannel(K);
 const other=t=>t==='a'?'b':'a',need=()=>Math.ceil(S.bestOf/2),
@@ -145,11 +146,11 @@ const row=t=>{const o=S[t];return`<div class="tm"><div class="bar" style="backgr
 <div class="to">${[0,1].map(i=>`<i class="${i<o.to?'u':''}"></i>`).join('')}</div>
 <div class="st">${Array.from({length:need()},(_,i)=>`<b class="${i<o.sets?'w':''}"></b>`).join('')}</div>
 <div class="pt">${o.pts}</div></div>`};
-let sig='',idx=0,cur=0,timer,lastTick='',evInit=false,lastEv=null;
+let sig='',idx=0,cur=0,timer,lastTick='',evInit=false,lastEv=null,adT;
 function play(e){const o=S[e.team],m=e.type==='match',L=['🏐','🔥','💥','👏'],W=['🏆','🎉','👑'],
   em=(m?W:L)[Math.floor(Math.random()*(m?W:L).length)],h=S.hist[S.hist.length-1]||[0,0],b=$('#bn');
   b.innerHTML=`<small>${m?'FINAL DEL PARTIDO · '+S.a.sets+'–'+S.b.sets+' EN SETS':'SET '+S.hist.length+' · '+h[0]+'–'+h[1]}</small>${m?'¡PARTIDO PARA':'SET PARA'} ${esc(o.name)}${m?'!':''} <span class="em">${em}</span>`;
-  b.classList.remove('go');void b.offsetWidth;b.classList.add('go')}
+  b.classList.remove('go');void b.offsetWidth;b.classList.add('go');const ad=$('#ad');ad.classList.add('hide');clearTimeout(adT);adT=setTimeout(()=>ad.classList.remove('hide'),6000)}
 function draw(){if(P||!$('#sb'))return;
   $('#sb').style.display=S.showScore?'':'none';
   $('#h1').textContent=S.title;$('#h2').textContent=S.sub;
@@ -167,7 +168,7 @@ function draw(){if(P||!$('#sb'))return;
   $('#sl').style.display=S.showSlider&&S.photos.length?'':'none';
   $('#sl').style.width=S.sliderW+'px';$('#sl').style.height=Math.round(S.sliderW*9/16)+'px';
   const ad=$('#ad');ad.style.display=S.showAd?'flex':'none';ad.textContent=S.adText;
-  Object.assign(ad.style,{right:'48px',width:S.sliderW+'px',height:S.adH+'px',top:(44+Math.round(S.sliderW*9/16)+20)+'px'});
+  Object.assign(ad.style,{left:'56px',top:'690px',width:'540px',height:S.adH+'px'});
   const cc=$('#cc');cc.style.display=S.showCourt?'block':'none';Object.assign(cc.style,{left:S.court.x+'px',top:S.court.y+'px',width:S.court.w+'px'});paintCourt('o');
   const cu=S.showChat&&S.chatUrl&&!S.showAd,c=S.chat,cf=$('#cf');$('#ch').style.display=cu?'block':'none';
   Object.assign($('#ch').style,{left:c.x+'px',top:c.y+'px',width:c.w+'px',height:c.h+'px'});
@@ -205,7 +206,7 @@ ${chk('Mostrar marcador','showScore')}`)}
 ${sec('sl','SLIDER DE FOTOS',`<label>Agregar fotos</label><input type="file" accept="image/*" multiple id="ph">
 <div class="g2">${f('Segundos por foto','interval','number')}${f('Ancho (px, alto 16:9)','sliderW','number')}</div>${chk('Mostrar slider','showSlider')}<div class="th" id="th"></div>`)}
 ${sec('ad','RECUADRO DE PUBLICIDAD',`<div class="row"><button data-a="ad:x" id="adb"></button></div>
-${f('Texto','adText')}${f('Alto (px)','adH','number')}${hint('Va bajo el slider, del mismo ancho. Mientras está visible, el chat se oculta. Atajo: P')}`)}
+${f('Texto','adText')}${f('Alto (px)','adH','number')}${hint('Va bajo las cámaras, donde salen las animaciones de set/partido (se oculta mientras dura la animación y vuelve después). Mientras está visible, el chat se oculta. Atajo: P')}`)}
 ${sec('an','ANIMACIÓN DE SET / PARTIDO',`${chk('Mostrar animación al ganar set o partido','showAnim')}
 <div class="g2" style="margin-top:8px"><button data-a="demo:a:set" class="g">Probar set A</button><button data-a="demo:b:set" class="g">Probar set B</button><button data-a="demo:a:match" class="g">Probar partido A</button><button data-a="demo:b:match" class="g">Probar partido B</button></div>`)}
 ${sec('ch','CHAT EN PANTALLA',`${chk('Mostrar chat','showChat')}${f('URL del chat (overlay de Social Stream, etc.)','chatUrl')}
